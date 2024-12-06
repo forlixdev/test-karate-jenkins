@@ -1,0 +1,36 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: maven-test-
+spec:
+  entrypoint: maven-test
+  templates:
+  - name: maven-test
+    container:
+      image: maven:3.9.9-eclipse-temurin-21-jammy
+      command: [bash]
+      args:
+        - -c
+        - |
+          set -e
+          echo "Waiting for Chrome to be ready..."
+          until wget -q --spider http://localhost:4444/wd/hub/status; do
+            echo "Chrome is not ready yet. Waiting..."
+            sleep 2
+          done
+          echo "Chrome is ready. Running tests..."
+          mvn clean test -Dkarate.options='--tags @web'
+      workingDir: /workspace
+    sidecars:
+    - name: chrome
+      image: selenium/standalone-chrome:latest
+    inputs:
+      artifacts:
+      - name: source
+        path: /workspace
+        git:
+          repo: https://github.com/forlixdev/test-karate-jenkins.git
+    outputs:
+      artifacts:
+      - name: test-results
+        path: /workspace/target/karate-reports
