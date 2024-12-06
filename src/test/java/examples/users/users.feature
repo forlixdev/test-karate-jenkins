@@ -35,12 +35,6 @@ Feature: sample karate test script
     And request user
     When method post
     Then status 201
-
     * def id = response.id
     * print 'created id is: ', id
-
-    Given path id
-    # When method get
-    # Then status 200
-    # And match response contains user
-  
+    And match id = "wrong"
